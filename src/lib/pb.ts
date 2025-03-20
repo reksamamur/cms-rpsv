@@ -3,7 +3,7 @@ import PocketBase from "pocketbase";
 
 export const queryClient = new QueryClient();
 
-export const pb = new PocketBase(import.meta.env.VITE_POCKETBASE_URL);
+export const pb = new PocketBase("http://127.0.0.1:8090");
 
 export function generateId(
   length = 15,

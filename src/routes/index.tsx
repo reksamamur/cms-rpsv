@@ -11,29 +11,48 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { generateId } from "@/lib/pb";
+import "@photo-sphere-viewer/markers-plugin/index.css";
+import useCollections from "@/hooks/use-collections";
+import useCreateCollection from "@/hooks/use-create-collection";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
 function Index() {
+  const [collectionName, setCollectionName] = useState("");
   const [dialogCreate, setDialogCreate] = useState(false);
   const navigate = useNavigate();
 
-  const canvasItems = [
-    { id: "GID-1234", name: "Canvas Name" },
-    { id: "GID-2345", name: "Canvas Name" },
-    { id: "GID-3456", name: "Canvas Name" },
-    { id: "GID-4567", name: "Canvas Name" },
-    { id: "GID-5678", name: "Canvas Name" },
-    { id: "GID-6789", name: "Canvas Name" },
-  ];
+  const { data } = useCollections();
+  const { mutate } = useCreateCollection();
 
   function onCreateCanvas() {
-    const canvasid = generateId();
-    navigate({
-      href: `${canvasid}/editor`,
-    });
+    mutate(
+      {
+        name: collectionName,
+      },
+      {
+        onSuccess: (e) => {
+          console.log({
+            m: "masuk",
+            e,
+          });
+          setDialogCreate(false);
+          setCollectionName("");
+
+          navigate({
+            href: `${e.id}/editor`,
+          });
+        },
+        onError: (e) => {
+          console.log({
+            m: "masuk error",
+            e,
+          });
+        },
+      }
+    );
   }
 
   return (
@@ -45,14 +64,19 @@ function Index() {
         </Button>
       </div>
 
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-        {canvasItems.map((item) => (
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2'>
+        {data?.map((item) => (
           <Card
             key={item.id}
             className='transition-all duration-200 hover:shadow-md hover:border-primary/20 cursor-pointer'
+            onClick={() =>
+              navigate({
+                href: `${item.id}/editor`,
+              })
+            }
           >
             <CardHeader className='p-4 pb-2'>
-              <p className='text-xs text-muted-foreground'>Generated ID</p>
+              <p className='text-xs text-muted-foreground'>Collection</p>
             </CardHeader>
             <CardContent className='p-4 pt-0'>
               <h3 className='text-xl font-medium'>{item.name}</h3>
@@ -69,7 +93,12 @@ function Index() {
           </DialogHeader>
           <div className='space-y-2'>
             <Label>Canvas name</Label>
-            <Input type='text' placeholder='eg: Hotel California' />
+            <Input
+              type='text'
+              placeholder='eg: Hotel California'
+              value={collectionName}
+              onChange={(e) => setCollectionName(e.target.value)}
+            />
             <Button onClick={() => onCreateCanvas()}>Create</Button>
           </div>
         </DialogContent>
